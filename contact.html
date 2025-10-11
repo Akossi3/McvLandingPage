@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - Ma Conseillère Voyage</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <h1>Ma Conseillère Voyage</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="destinations.html">Destinations</a></li>
+                <li><a href="about.html">À Propos</a></li>
+                <li><a href="contact.html" class="active">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Contactez-Nous</h2>
+            <p>Nous sommes là pour répondre à toutes vos questions</p>
+        </div>
+    </section>
+
+    <section class="content-section">
+        <div class="container">
+            <div class="contact-info">
+                <h2>Nos Coordonnées</h2>
+                <div class="contact-item">
+                    <strong>📱 WhatsApp:</strong> +225 05 03 69 29 29
+                </div>
+                <div class="contact-item">
+                    <strong>📞 Téléphone:</strong> +225 07 09 16 95 51
+                </div>
+                <div class="contact-item">
+                    <strong>📧 Email:</strong> contact@maconseillerevoyage.com
+                </div>
+                <div class="contact-item">
+                    <strong>🌐 Site Web:</strong> www.maconseillerevoyage.com
+                </div>
+                <div class="contact-item">
+                    <strong>📍 Localisation:</strong> Côte d'Ivoire
+                </div>
+            </div>
+
+            <div class="service-card">
+                <h2>Envoyez-nous un Message</h2>
+                <form id="contactForm">
+                    <div class="form-group">
+                        <label for="name">Nom Complet *</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Téléphone *</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="service">Type de Service *</label>
+                        <select id="service" name="service" required>
+                            <option value="">Sélectionnez un service</option>
+                            <option value="sejour-touristique">Séjour Touristique</option>
+                            <option value="voyage-affaires">Voyage d'Affaires</option>
+                            <option value="assistance-visa">Assistance Visa</option>
+                            <option value="voyage-groupe">Voyage de Groupe</option>
+                            <option value="voyage-mesure">Voyage sur Mesure</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="destination">Destination Souhaitée</label>
+                        <input type="text" id="destination" name="destination" placeholder="Ex: Dubaï, Turquie, Maroc...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date">Date de Départ Souhaitée</label>
+                        <input type="date" id="date" name="date">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="budget">Budget Approximatif</label>
+                        <input type="text" id="budget" name="budget" placeholder="Ex: 1 000 000 FCFA">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="travelers">Nombre de Voyageurs</label>
+                        <input type="number" id="travelers" name="travelers" min="1" value="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Votre Message *</label>
+                        <textarea id="message" name="message" required placeholder="Décrivez-nous votre projet de voyage..."></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-button">Envoyer le Message</button>
+                </form>
+            </div>
+
+            <div class="service-card">
+                <h2>Horaires d'Ouverture</h2>
+                <ul>
+                    <li><strong>Lundi - Vendredi:</strong> 8h00 - 18h00</li>
+                    <li><strong>Samedi:</strong> 9h00 - 14h00</li>
+                    <li><strong>Dimanche:</strong> Fermé</li>
+                </ul>
+                <p style="margin-top: 1rem;"><em>Service d'urgence disponible 24/7 pour nos clients en voyage</em></p>
+            </div>
+
+            <div class="service-card">
+                <h2>Suivez-nous sur les Réseaux Sociaux</h2>
+                <p>Restez connecté avec nous pour découvrir nos dernières offres, destinations et conseils de voyage.</p>
+                <div style="margin-top: 1rem;">
+                    <p><strong>Facebook:</strong> Ma Conseillère Voyage</p>
+                    <p><strong>Instagram:</strong> @maconseillerevoyage</p>
+                    <p><strong>Twitter:</strong> @maconsvoyage</p>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <h2>Questions Fréquentes</h2>
+                <h3>Comment puis-je obtenir un devis ?</h3>
+                <p>Vous pouvez nous contacter par téléphone, WhatsApp ou remplir le formulaire ci-dessus. Nous vous répondrons dans les 24 heures avec un devis personnalisé.</p>
+
+                <h3>Proposez-vous des facilités de paiement ?</h3>
+                <p>Oui, nous offrons différentes options de paiement et pouvons établir un plan de paiement adapté à votre budget.</p>
+
+                <h3>Puis-je modifier ma réservation ?</h3>
+                <p>Les modifications sont possibles selon les conditions de nos partenaires. Contactez-nous au plus tôt pour étudier les options.</p>
+
+                <h3>Que faire en cas d'urgence pendant mon voyage ?</h3>
+                <p>Nous disposons d'un service d'urgence 24/7 pour tous nos clients en voyage. Les numéros vous seront communiqués avant votre départ.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Ma Conseillère Voyage</h3>
+                    <p>Votre cabinet conseil en voyage de confiance</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <p>WhatsApp: +225 05 03 69 29 29</p>
+                    <p>Tél: +225 07 09 16 95 51</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Suivez-nous</h3>
+                    <p>Facebook | Instagram | Twitter</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Ma Conseillère Voyage. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Merci pour votre message ! Nous vous contacterons dans les plus brefs délais.');
+            this.reset();
+        });
+    </script>
+</body>
+</html>
