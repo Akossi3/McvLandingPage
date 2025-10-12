@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Simple OpenAI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #059669;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error {
+            color: #721c24;
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-box">
+        <h1>🧪 Test Simple OpenAI</h1>
+        <p>Ce test vérifie si votre clé API OpenAI fonctionne.</p>
+
+        <button onclick="testOpenAI()">Tester OpenAI maintenant</button>
+
+        <div id="result">Cliquez sur le bouton pour commencer le test...</div>
+    </div>
+
+    <script type="module">
+        // Charger la configuration
+        let API_CONFIG;
+
+        try {
+            const module = await import('./js/config.local.js');
+            API_CONFIG = module.API_CONFIG;
+            document.getElementById('result').innerHTML = '✅ Fichier config.local.js chargé!\n\n';
+
+            if (API_CONFIG.OPENAI_API_KEY === 'REPLACE_WITH_YOUR_KEY') {
+                document.getElementById('result').innerHTML += '❌ ERREUR: La clé API n\'est pas configurée\n\n';
+                document.getElementById('result').innerHTML += 'Éditez le fichier js/config.local.js et ajoutez votre vraie clé OpenAI';
+                document.getElementById('result').className = 'error';
+            } else {
+                const maskedKey = API_CONFIG.OPENAI_API_KEY.substring(0, 10) + '...' + API_CONFIG.OPENAI_API_KEY.substring(API_CONFIG.OPENAI_API_KEY.length - 4);
+                document.getElementById('result').innerHTML += `Clé API détectée: ${maskedKey}\n\n`;
+                document.getElementById('result').innerHTML += 'Cliquez sur le bouton pour tester l\'API OpenAI';
+            }
+        } catch (error) {
+            document.getElementById('result').innerHTML = '❌ ERREUR: Impossible de charger config.local.js\n\n';
+            document.getElementById('result').innerHTML += 'Détails: ' + error.message + '\n\n';
+            document.getElementById('result').innerHTML += 'Assurez-vous que le fichier js/config.local.js existe';
+            document.getElementById('result').className = 'error';
+        }
+
+        window.testOpenAI = async function() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '⏳ Test en cours...\n\n';
+
+            if (!API_CONFIG) {
+                resultDiv.innerHTML = '❌ Configuration non chargée. Rechargez la page.';
+                resultDiv.className = 'error';
+                return;
+            }
+
+            try {
+                resultDiv.innerHTML += '📤 Envoi de la requête à OpenAI...\n';
+
+                const response = await fetch(API_CONFIG.OPENAI_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_CONFIG.OPENAI_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: [
+                            { role: 'system', content: 'Tu es un assistant de test.' },
+                            { role: 'user', content: 'Dis juste "Bonjour, le test fonctionne!"' }
+                        ],
+                        max_tokens: 50,
+                        temperature: 0.7
+                    })
+                });
+
+                resultDiv.innerHTML += `📥 Réponse reçue (Status: ${response.status})\n\n`;
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: { message: 'Erreur inconnue' } }));
+
+                    resultDiv.innerHTML += `❌ ERREUR ${response.status}:\n`;
+                    resultDiv.innerHTML += `${errorData.error?.message || 'Erreur inconnue'}\n\n`;
+
+                    if (response.status === 401) {
+                        resultDiv.innerHTML += '🔧 SOLUTION:\n';
+                        resultDiv.innerHTML += '1. Votre clé API est invalide ou expirée\n';
+                        resultDiv.innerHTML += '2. Allez sur: https://platform.openai.com/api-keys\n';
+                        resultDiv.innerHTML += '3. Créez une nouvelle clé API\n';
+                        resultDiv.innerHTML += '4. Remplacez-la dans js/config.local.js\n';
+                    } else if (response.status === 429) {
+                        resultDiv.innerHTML += '🔧 SOLUTION:\n';
+                        resultDiv.innerHTML += '1. Votre crédit OpenAI est épuisé ou vous avez atteint la limite\n';
+                        resultDiv.innerHTML += '2. Vérifiez sur: https://platform.openai.com/usage\n';
+                        resultDiv.innerHTML += '3. Ajoutez du crédit si nécessaire\n';
+                    } else if (response.status === 400) {
+                        resultDiv.innerHTML += '🔧 La requête est mal formée\n';
+                    }
+
+                    resultDiv.className = 'error';
+                    return;
+                }
+
+                const data = await response.json();
+                const message = data.choices[0].message.content;
+
+                resultDiv.innerHTML += '✅ SUCCÈS!\n\n';
+                resultDiv.innerHTML += '🤖 Réponse de OpenAI:\n';
+                resultDiv.innerHTML += `"${message}"\n\n`;
+                resultDiv.innerHTML += '========================================\n';
+                resultDiv.innerHTML += '✅ Votre clé API OpenAI fonctionne parfaitement!\n';
+                resultDiv.innerHTML += '✅ Le chat devrait maintenant fonctionner.\n\n';
+                resultDiv.innerHTML += 'Si le chat ne fonctionne toujours pas, le problème\n';
+                resultDiv.innerHTML += 'vient probablement de Firestore (règles non publiées).\n';
+                resultDiv.className = 'success';
+
+            } catch (error) {
+                resultDiv.innerHTML += `❌ ERREUR RÉSEAU:\n${error.message}\n\n`;
+
+                if (error.message.includes('Failed to fetch')) {
+                    resultDiv.innerHTML += '🔧 SOLUTION:\n';
+                    resultDiv.innerHTML += '1. Vérifiez votre connexion Internet\n';
+                    resultDiv.innerHTML += '2. Vérifiez que vous êtes sur http://localhost:8000\n';
+                    resultDiv.innerHTML += '3. Désactivez les bloqueurs de publicité\n';
+                }
+
+                resultDiv.className = 'error';
+            }
+        };
+    </script>
+</body>
+</html>

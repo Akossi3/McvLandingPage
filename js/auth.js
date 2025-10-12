@@ -14,6 +14,7 @@ export function initAuth() {
 // Update UI based on auth state
 function updateUIForAuthState(user) {
     const authButtons = document.getElementById('auth-buttons');
+    const navAuth = document.getElementById('nav-auth');
     const userInfo = document.getElementById('user-info');
     const commentsSection = document.getElementById('comments-section');
     const loginPrompt = document.getElementById('login-prompt');
@@ -24,6 +25,14 @@ function updateUIForAuthState(user) {
             authButtons.innerHTML = `
                 <span class="user-name">Bonjour, ${user.displayName || user.email}</span>
                 <button onclick="window.authModule.logout()" class="btn-logout">Déconnexion</button>
+            `;
+        }
+
+        // Update navbar auth button
+        if (navAuth) {
+            navAuth.innerHTML = `
+                <span class="nav-user-name">${user.displayName || user.email.split('@')[0]}</span>
+                <button onclick="window.authModule.logout()" class="btn-logout-nav">Déconnexion</button>
             `;
         }
 
@@ -44,6 +53,13 @@ function updateUIForAuthState(user) {
         if (authButtons) {
             authButtons.innerHTML = `
                 <button onclick="window.authModule.showLoginModal()" class="btn-login">Se connecter</button>
+            `;
+        }
+
+        // Update navbar auth button
+        if (navAuth) {
+            navAuth.innerHTML = `
+                <button onclick="window.authModule.showLoginModal()" class="btn-login-nav">Connexion</button>
             `;
         }
 
@@ -153,15 +169,3 @@ export function showLoginForm() {
     document.getElementById('signup-form').style.display = 'none';
     document.getElementById('login-form').style.display = 'block';
 }
-
-// Make functions available globally
-window.authModule = {
-    showLoginModal,
-    hideLoginModal,
-    signInWithGoogle,
-    signInWithEmail,
-    signUpWithEmail,
-    logout,
-    showSignupForm,
-    showLoginForm
-};

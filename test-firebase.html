@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Firebase - MCV</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #059669;
+        }
+        #output {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test de Configuration Firebase</h1>
+
+    <div class="test-section">
+        <h2>État de connexion</h2>
+        <div id="auth-status" class="status info">Vérification...</div>
+        <div id="user-info"></div>
+        <button onclick="testGoogleLogin()">Test connexion Google</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Firestore - Commentaires</h2>
+        <button onclick="testReadComments()">Lire les commentaires</button>
+        <button onclick="testWriteComment()">Écrire un commentaire test</button>
+        <button onclick="testListenComments()">Écouter en temps réel</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Console de sortie</h2>
+        <div id="output">En attente des tests...</div>
+    </div>
+
+    <script type="module">
+        import { auth, db, googleProvider, signInWithPopup, signOut, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp } from './js/firebase-config.js';
+        import { getCurrentUser } from './js/auth.js';
+
+        const output = document.getElementById('output');
+        const authStatus = document.getElementById('auth-status');
+        const userInfo = document.getElementById('user-info');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        }
+
+        // Monitor auth state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                authStatus.className = 'status success';
+                authStatus.textContent = '✅ Connecté';
+                userInfo.innerHTML = `
+                    <p><strong>Utilisateur:</strong> ${user.displayName || user.email}</p>
+                    <p><strong>UID:</strong> ${user.uid}</p>
+                    <button onclick="window.testLogout()">Se déconnecter</button>
+                `;
+                log(`Utilisateur connecté: ${user.email}`, 'success');
+            } else {
+                authStatus.className = 'status error';
+                authStatus.textContent = '❌ Non connecté';
+                userInfo.innerHTML = '<p>Vous devez être connecté pour tester Firestore</p>';
+                log('Aucun utilisateur connecté', 'error');
+            }
+        });
+
+        // Test Google login
+        window.testGoogleLogin = async function() {
+            try {
+                log('Tentative de connexion Google...');
+                const result = await signInWithPopup(auth, googleProvider);
+                log(`Connexion réussie: ${result.user.email}`, 'success');
+            } catch (error) {
+                log(`Erreur de connexion: ${error.code} - ${error.message}`, 'error');
+            }
+        };
+
+        // Test logout
+        window.testLogout = async function() {
+            try {
+                await signOut(auth);
+                log('Déconnexion réussie', 'success');
+            } catch (error) {
+                log(`Erreur de déconnexion: ${error.message}`, 'error');
+            }
+        };
+
+        // Test reading comments
+        window.testReadComments = async function() {
+            try {
+                log('Tentative de lecture des commentaires...');
+                const commentsQuery = query(collection(db, 'comments'), orderBy('timestamp', 'desc'));
+                const snapshot = await getDocs(commentsQuery);
+
+                log(`Nombre de commentaires trouvés: ${snapshot.size}`, 'success');
+
+                snapshot.forEach((doc) => {
+                    const comment = doc.data();
+                    log(`- [${doc.id}] ${comment.userName}: ${comment.text}`);
+                });
+
+                if (snapshot.empty) {
+                    log('Aucun commentaire dans la base de données');
+                }
+            } catch (error) {
+                log(`❌ ERREUR LECTURE: ${error.code} - ${error.message}`, 'error');
+
+                if (error.code === 'permission-denied') {
+                    log('⚠️ PROBLÈME: Les règles Firestore bloquent la lecture', 'error');
+                    log('SOLUTION: Vérifiez que les règles sont bien publiées dans Firebase Console', 'error');
+                } else if (error.code === 'unavailable') {
+                    log('⚠️ PROBLÈME: Impossible de se connecter à Firestore', 'error');
+                    log('SOLUTION: Vérifiez votre connexion internet', 'error');
+                }
+            }
+        };
+
+        // Test writing comment
+        window.testWriteComment = async function() {
+            const user = getCurrentUser();
+
+            if (!user) {
+                log('Vous devez être connecté pour écrire un commentaire', 'error');
+                return;
+            }
+
+            try {
+                log('Tentative d\'écriture d\'un commentaire test...');
+
+                const docRef = await addDoc(collection(db, 'comments'), {
+                    userId: user.uid,
+                    userName: user.displayName || user.email,
+                    userPhoto: user.photoURL || null,
+                    text: `Test commentaire créé le ${new Date().toLocaleString()}`,
+                    timestamp: serverTimestamp(),
+                    likes: [],
+                    likesCount: 0
+                });
+
+                log(`✅ Commentaire créé avec succès! ID: ${docRef.id}`, 'success');
+            } catch (error) {
+                log(`❌ ERREUR ÉCRITURE: ${error.code} - ${error.message}`, 'error');
+
+                if (error.code === 'permission-denied') {
+                    log('⚠️ PROBLÈME: Les règles Firestore bloquent l\'écriture', 'error');
+                    log('SOLUTION 1: Vérifiez que les règles firestore.rules sont publiées', 'error');
+                    log('SOLUTION 2: Dans Firebase Console, allez dans Firestore > Règles et vérifiez', 'error');
+                } else if (error.code === 'not-found') {
+                    log('⚠️ PROBLÈME: La base Firestore n\'existe pas', 'error');
+                    log('SOLUTION: Créez la base Firestore dans Firebase Console', 'error');
+                }
+            }
+        };
+
+        // Test real-time listener
+        window.testListenComments = function() {
+            const user = getCurrentUser();
+
+            if (!user) {
+                log('Vous devez être connecté pour écouter les commentaires', 'error');
+                return;
+            }
+
+            try {
+                log('Configuration de l\'écoute en temps réel...');
+                const commentsQuery = query(collection(db, 'comments'), orderBy('timestamp', 'desc'));
+
+                const unsubscribe = onSnapshot(commentsQuery,
+                    (snapshot) => {
+                        log(`📡 Mise à jour reçue: ${snapshot.size} commentaires`, 'success');
+                        snapshot.forEach((doc) => {
+                            const comment = doc.data();
+                            log(`  - ${comment.userName}: ${comment.text.substring(0, 50)}...`);
+                        });
+                    },
+                    (error) => {
+                        log(`❌ ERREUR LISTENER: ${error.code} - ${error.message}`, 'error');
+                    }
+                );
+
+                log('Listener activé! Les mises à jour apparaîtront ici...', 'success');
+
+                // Auto-stop after 30 seconds
+                setTimeout(() => {
+                    unsubscribe();
+                    log('Listener arrêté après 30 secondes', 'info');
+                }, 30000);
+
+            } catch (error) {
+                log(`❌ ERREUR: ${error.message}`, 'error');
+            }
+        };
+
+        // Initial Firebase check
+        log('=== Initialisation ===');
+        log(`Firebase App: ${auth.app.name}`);
+        log(`Firebase Auth initialisé: ${auth ? 'Oui' : 'Non'}`);
+        log(`Firestore initialisé: ${db ? 'Oui' : 'Non'}`);
+        log('======================\n');
+    </script>
+</body>
+</html>

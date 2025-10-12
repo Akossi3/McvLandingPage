@@ -12,13 +12,18 @@
             <div class="logo">
                 <h1>Ma Conseillère Voyage</h1>
             </div>
-            <ul class="nav-menu">
-                <li><a href="index.html" class="active">Accueil</a></li>
-                <li><a href="services.html">Services</a></li>
-                <li><a href="destinations.html">Destinations</a></li>
-                <li><a href="about.html">À Propos</a></li>
-                <li><a href="contact.html">Contact</a></li>
-            </ul>
+            <div class="nav-right">
+                <ul class="nav-menu">
+                    <li><a href="index.html" class="active">Accueil</a></li>
+                    <li><a href="services.html">Services</a></li>
+                    <li><a href="destinations.html">Destinations</a></li>
+                    <li><a href="about.html">À Propos</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+                <div id="nav-auth" class="nav-auth">
+                    <button onclick="window.authModule.showLoginModal()" class="btn-login-nav">Connexion</button>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -214,12 +219,23 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="js/firebase-config.js"></script>
-    <script type="module" src="js/auth.js"></script>
-    <script type="module" src="js/comments.js"></script>
     <script type="module">
+        // Import all modules
         import { initAuth } from './js/auth.js';
         import { initComments, setupCommentForm } from './js/comments.js';
+        import * as authModule from './js/auth.js';
+
+        // Make auth functions globally available
+        window.authModule = {
+            showLoginModal: authModule.showLoginModal,
+            hideLoginModal: authModule.hideLoginModal,
+            signInWithGoogle: authModule.signInWithGoogle,
+            signInWithEmail: authModule.signInWithEmail,
+            signUpWithEmail: authModule.signUpWithEmail,
+            logout: authModule.logout,
+            showSignupForm: authModule.showSignupForm,
+            showLoginForm: authModule.showLoginForm
+        };
 
         // Initialize authentication
         initAuth();

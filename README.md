@@ -35,21 +35,28 @@ Site web complet pour Ma Conseillère Voyage avec authentification, système de 
 
 ```
 /Users/akossi/Documents/App Amaide/
-├── index.html              # Page d'accueil avec auth et commentaires
-├── services.html           # Page des services
-├── destinations.html       # Page des destinations
-├── about.html             # Page à propos
-├── contact.html           # Page de contact
-├── chat.html              # Page de chat IA (protégée)
-├── styles.css             # Styles CSS complets
-├── firestore.rules        # Règles de sécurité Firestore
-├── vercel.json            # Configuration Vercel
+├── index.html                  # Page d'accueil avec auth et commentaires
+├── services.html               # Page des services
+├── destinations.html           # Page des destinations
+├── about.html                 # Page à propos
+├── contact.html               # Page de contact
+├── chat.html                  # Page de chat IA (protégée)
+├── test-firebase.html         # 🧪 Page de test Firebase/Firestore
+├── test-chat.html             # 🧪 Page de test OpenAI/Chat
+├── styles.css                 # Styles CSS complets
+├── firestore.rules            # Règles de sécurité Firestore
+├── vercel.json                # Configuration Vercel
+├── README.md                  # Documentation principale
+├── FIREBASE-SETUP.md          # 📖 Guide configuration Firebase
+├── TROUBLESHOOTING-CHAT.md    # 📖 Guide dépannage chat
+├── .gitignore                 # Fichiers ignorés par Git
 ├── js/
-│   ├── firebase-config.js # Configuration Firebase
-│   ├── auth.js            # Gestion authentification
-│   ├── comments.js        # Système de commentaires
-│   └── chat.js            # Chat IA avec OpenAI
-└── README.md              # Ce fichier
+│   ├── firebase-config.js     # Configuration Firebase
+│   ├── auth.js                # Gestion authentification
+│   ├── comments.js            # Système de commentaires
+│   ├── chat.js                # Chat IA avec OpenAI
+│   ├── config.js              # Template configuration API (public)
+│   └── config.local.js        # Configuration API locale (privé, .gitignore)
 ```
 
 ## 🔧 Configuration
@@ -219,21 +226,54 @@ npx http-server
 
 ## 🐛 Dépannage
 
-### Erreur: "Firebase Auth not configured"
+### 🚨 Problème : Les commentaires ou le chat ne fonctionnent pas ?
+
+**📖 Consultez les guides de dépannage détaillés** :
+
+1. **[FIREBASE-SETUP.md](./FIREBASE-SETUP.md)** - Configuration complète de Firebase
+   - Comment créer la base Firestore
+   - Comment publier les règles de sécurité
+   - Page de test pour diagnostiquer les problèmes
+
+2. **[TROUBLESHOOTING-CHAT.md](./TROUBLESHOOTING-CHAT.md)** - Dépannage du chat IA
+   - Configuration de la clé OpenAI
+   - Vérification du crédit OpenAI
+   - Page de test pour diagnostiquer le chat
+
+3. **Pages de test disponibles** :
+   - `test-firebase.html` - Teste Firebase et Firestore
+   - `test-chat.html` - Teste OpenAI et le chat complet
+
+### Erreurs Courantes
+
+#### Erreur: "Firebase Auth not configured"
 - Vérifier que les méthodes de connexion sont activées dans Firebase Console
 
-### Erreur: "Permission denied" sur Firestore
-- Vérifier que les règles Firestore sont bien publiées
-- S'assurer que l'utilisateur est connecté
+#### Erreur: "Permission denied" sur Firestore
+- **Solution** : Voir [FIREBASE-SETUP.md](./FIREBASE-SETUP.md)
+- Les règles Firestore doivent être publiées
+- L'utilisateur doit être connecté
 
-### Chat IA ne répond pas
-- Vérifier la clé OpenAI
-- Vérifier la console pour les erreurs CORS
-- Vérifier le quota OpenAI
+#### Erreur: "Désolé, une erreur s'est produite" (Chat)
+- **Solution** : Voir [TROUBLESHOOTING-CHAT.md](./TROUBLESHOOTING-CHAT.md)
+- Vérifier la clé OpenAI dans `js/config.local.js`
+- Vérifier le crédit OpenAI sur platform.openai.com
+- Vérifier les règles Firestore
 
-### Modules ES6 ne se chargent pas
+#### Modules ES6 ne se chargent pas
 - Utiliser un serveur local (pas file://)
 - Vérifier que `type="module"` est présent dans les scripts
+
+### 🧪 Diagnostic Rapide
+
+```bash
+# Démarrer le serveur local
+python3 -m http.server 8000
+
+# Ouvrir les pages de test
+# http://localhost:8000/test-firebase.html
+# http://localhost:8000/test-chat.html
+```
 
 ## 📝 TODO / Améliorations Futures
 

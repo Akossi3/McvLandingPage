@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Chat OpenAI - MCV</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #059669;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #output {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .code-block {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .test-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 Test de Configuration OpenAI Chat</h1>
+
+    <div class="test-section">
+        <h2>État de la configuration</h2>
+        <div id="config-status" class="status info">Vérification...</div>
+        <div id="config-details"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>État de connexion Firebase</h2>
+        <div id="auth-status" class="status info">Vérification...</div>
+        <button onclick="testGoogleLogin()">Se connecter avec Google</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Test de l'API OpenAI</h2>
+        <p>Testez si votre clé API OpenAI fonctionne :</p>
+        <input type="text" id="test-message" class="test-input" placeholder="Tapez un message de test (ex: Bonjour)" value="Dis bonjour">
+        <button onclick="testOpenAI()" id="test-btn">Tester l'API OpenAI</button>
+        <button onclick="testFullChat()" id="test-full-btn">Tester Chat Complet (avec Firestore)</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Console de diagnostic</h2>
+        <div id="output">En attente des tests...</div>
+    </div>
+
+    <script type="module">
+        import { auth, db, googleProvider, signInWithPopup, signOut, collection, addDoc, query, orderBy, getDocs, serverTimestamp } from './js/firebase-config.js';
+
+        const output = document.getElementById('output');
+        const configStatus = document.getElementById('config-status');
+        const configDetails = document.getElementById('config-details');
+        const authStatus = document.getElementById('auth-status');
+
+        let API_CONFIG = null;
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        }
+
+        // Load config
+        async function loadConfig() {
+            try {
+                log('Tentative de chargement de config.local.js...');
+                const module = await import('./js/config.local.js');
+                API_CONFIG = module.API_CONFIG;
+                log('✅ config.local.js chargé', 'success');
+                return true;
+            } catch (error) {
+                log('⚠️ config.local.js non trouvé, tentative avec config.js...', 'warning');
+                try {
+                    const module = await import('./js/config.js');
+                    API_CONFIG = module.API_CONFIG;
+                    log('✅ config.js chargé', 'success');
+                    return true;
+                } catch (error2) {
+                    log('❌ Impossible de charger la configuration', 'error');
+                    return false;
+                }
+            }
+        }
+
+        // Check config
+        async function checkConfig() {
+            const loaded = await loadConfig();
+
+            if (!loaded) {
+                configStatus.className = 'status error';
+                configStatus.textContent = '❌ Configuration non trouvée';
+                configDetails.innerHTML = `
+                    <div class="warning">
+                        <p><strong>Problème:</strong> Aucun fichier de configuration trouvé</p>
+                        <p><strong>Solution:</strong> Créez le fichier js/config.local.js avec votre clé API OpenAI</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const hasKey = API_CONFIG.OPENAI_API_KEY && API_CONFIG.OPENAI_API_KEY !== 'REPLACE_WITH_YOUR_KEY';
+            const hasUrl = API_CONFIG.OPENAI_API_URL && API_CONFIG.OPENAI_API_URL.includes('openai.com');
+
+            log(`Clé API présente: ${hasKey ? 'Oui' : 'Non'}`);
+            log(`URL API valide: ${hasUrl ? 'Oui' : 'Non'}`);
+
+            if (!hasKey) {
+                configStatus.className = 'status error';
+                configStatus.textContent = '❌ Clé API OpenAI manquante ou invalide';
+                configDetails.innerHTML = `
+                    <div class="error">
+                        <p><strong>Problème:</strong> La clé API OpenAI n'est pas configurée</p>
+                        <p><strong>Fichier concerné:</strong> js/config.local.js</p>
+                        <p><strong>Valeur actuelle:</strong> "${API_CONFIG.OPENAI_API_KEY}"</p>
+                        <br>
+                        <p><strong>Solution:</strong></p>
+                        <ol>
+                            <li>Ouvrez ou créez le fichier <code>js/config.local.js</code></li>
+                            <li>Ajoutez votre vraie clé API OpenAI (commence par "sk-")</li>
+                            <li>Le fichier doit contenir:</li>
+                        </ol>
+                        <div class="code-block">export const API_CONFIG = {
+    OPENAI_API_KEY: 'sk-VOTRE_CLE_ICI',
+    OPENAI_API_URL: 'https://api.openai.com/v1/chat/completions'
+};</div>
+                    </div>
+                `;
+                log('❌ Clé API invalide: ' + API_CONFIG.OPENAI_API_KEY, 'error');
+            } else {
+                configStatus.className = 'status success';
+                configStatus.textContent = '✅ Configuration OpenAI valide';
+                const maskedKey = API_CONFIG.OPENAI_API_KEY.substring(0, 10) + '...' + API_CONFIG.OPENAI_API_KEY.substring(API_CONFIG.OPENAI_API_KEY.length - 4);
+                configDetails.innerHTML = `
+                    <p><strong>Clé API:</strong> ${maskedKey}</p>
+                    <p><strong>URL API:</strong> ${API_CONFIG.OPENAI_API_URL}</p>
+                `;
+                log(`✅ Configuration valide (clé: ${maskedKey})`, 'success');
+            }
+
+            if (!hasUrl) {
+                log('⚠️ URL API invalide', 'warning');
+            }
+        }
+
+        // Monitor auth state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                authStatus.className = 'status success';
+                authStatus.textContent = `✅ Connecté: ${user.displayName || user.email}`;
+                log(`Utilisateur connecté: ${user.email}`, 'success');
+            } else {
+                authStatus.className = 'status error';
+                authStatus.textContent = '❌ Non connecté';
+                log('Aucun utilisateur connecté', 'error');
+            }
+        });
+
+        // Test Google login
+        window.testGoogleLogin = async function() {
+            try {
+                log('Tentative de connexion Google...');
+                const result = await signInWithPopup(auth, googleProvider);
+                log(`Connexion réussie: ${result.user.email}`, 'success');
+            } catch (error) {
+                log(`Erreur de connexion: ${error.code} - ${error.message}`, 'error');
+            }
+        };
+
+        // Test OpenAI API
+        window.testOpenAI = async function() {
+            const testBtn = document.getElementById('test-btn');
+            testBtn.disabled = true;
+
+            if (!API_CONFIG || API_CONFIG.OPENAI_API_KEY === 'REPLACE_WITH_YOUR_KEY') {
+                log('❌ Veuillez d\'abord configurer votre clé API OpenAI', 'error');
+                testBtn.disabled = false;
+                return;
+            }
+
+            const testMessage = document.getElementById('test-message').value;
+            if (!testMessage) {
+                log('❌ Veuillez entrer un message de test', 'error');
+                testBtn.disabled = false;
+                return;
+            }
+
+            try {
+                log('📤 Envoi de la requête à OpenAI...');
+                log(`Message: "${testMessage}"`);
+
+                const response = await fetch(API_CONFIG.OPENAI_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_CONFIG.OPENAI_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: [
+                            { role: 'system', content: 'Tu es un assistant de test.' },
+                            { role: 'user', content: testMessage }
+                        ],
+                        max_tokens: 100,
+                        temperature: 0.7
+                    })
+                });
+
+                log(`📥 Réponse reçue (status: ${response.status})`);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    log(`❌ ERREUR API: ${response.status} - ${errorData.error?.message || 'Erreur inconnue'}`, 'error');
+
+                    if (response.status === 401) {
+                        log('⚠️ PROBLÈME: Clé API invalide ou expirée', 'error');
+                        log('SOLUTION: Vérifiez votre clé API OpenAI sur https://platform.openai.com/api-keys', 'error');
+                    } else if (response.status === 429) {
+                        log('⚠️ PROBLÈME: Limite de requêtes atteinte ou crédit insuffisant', 'error');
+                        log('SOLUTION: Vérifiez votre usage et crédit sur https://platform.openai.com/usage', 'error');
+                    } else if (response.status === 400) {
+                        log('⚠️ PROBLÈME: Requête mal formée', 'error');
+                    }
+
+                    testBtn.disabled = false;
+                    return;
+                }
+
+                const data = await response.json();
+                const assistantMessage = data.choices[0].message.content;
+
+                log('✅ SUCCÈS! Réponse de OpenAI:', 'success');
+                log(`"${assistantMessage}"`, 'success');
+
+            } catch (error) {
+                log(`❌ ERREUR RÉSEAU: ${error.message}`, 'error');
+
+                if (error.message.includes('Failed to fetch')) {
+                    log('⚠️ PROBLÈME: Impossible de contacter OpenAI', 'error');
+                    log('SOLUTION: Vérifiez votre connexion internet ou les CORS', 'error');
+                }
+            } finally {
+                testBtn.disabled = false;
+            }
+        };
+
+        // Test full chat (with Firestore)
+        window.testFullChat = async function() {
+            const testFullBtn = document.getElementById('test-full-btn');
+            testFullBtn.disabled = true;
+
+            const user = auth.currentUser;
+            if (!user) {
+                log('❌ Vous devez être connecté pour tester le chat complet', 'error');
+                testFullBtn.disabled = false;
+                return;
+            }
+
+            if (!API_CONFIG || API_CONFIG.OPENAI_API_KEY === 'REPLACE_WITH_YOUR_KEY') {
+                log('❌ Veuillez d\'abord configurer votre clé API OpenAI', 'error');
+                testFullBtn.disabled = false;
+                return;
+            }
+
+            const testMessage = document.getElementById('test-message').value;
+
+            try {
+                log('=== TEST CHAT COMPLET ===');
+                log('Étape 1/3: Sauvegarde du message utilisateur dans Firestore...');
+
+                // Save user message
+                await addDoc(collection(db, 'chats', user.uid, 'messages'), {
+                    role: 'user',
+                    content: testMessage,
+                    timestamp: serverTimestamp()
+                });
+                log('✅ Message utilisateur sauvegardé', 'success');
+
+                // Call OpenAI
+                log('Étape 2/3: Appel à OpenAI...');
+                const response = await fetch(API_CONFIG.OPENAI_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_CONFIG.OPENAI_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: [
+                            { role: 'system', content: 'Tu es un assistant de test.' },
+                            { role: 'user', content: testMessage }
+                        ],
+                        max_tokens: 100,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const assistantMessage = data.choices[0].message.content;
+                log('✅ Réponse reçue de OpenAI', 'success');
+
+                // Save assistant message
+                log('Étape 3/3: Sauvegarde de la réponse dans Firestore...');
+                await addDoc(collection(db, 'chats', user.uid, 'messages'), {
+                    role: 'assistant',
+                    content: assistantMessage,
+                    timestamp: serverTimestamp()
+                });
+                log('✅ Réponse sauvegardée', 'success');
+
+                log('\n🎉 TEST COMPLET RÉUSSI!', 'success');
+                log(`Réponse: "${assistantMessage}"`, 'success');
+
+            } catch (error) {
+                log(`❌ ERREUR: ${error.message}`, 'error');
+
+                if (error.code === 'permission-denied') {
+                    log('⚠️ PROBLÈME: Règles Firestore bloquent l\'accès', 'error');
+                    log('SOLUTION: Vérifiez que les règles sont publiées dans Firebase Console', 'error');
+                } else if (error.message.includes('API Error')) {
+                    log('⚠️ PROBLÈME: Erreur de l\'API OpenAI', 'error');
+                    log('SOLUTION: Vérifiez votre clé API et votre crédit OpenAI', 'error');
+                }
+            } finally {
+                testFullBtn.disabled = false;
+            }
+        };
+
+        // Initialize
+        log('=== Initialisation du diagnostic ===\n');
+        checkConfig();
+    </script>
+</body>
+</html>
