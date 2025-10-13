@@ -11,6 +11,15 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Check if user is admin
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'admin@mcv.com' ||
+        request.auth.token.email == 'akossi@mcv.com'
+        // Ajoutez d'autres emails admin ici
+      );
+    }
+
     // Comments collection
     match /comments/{commentId} {
       // Anyone authenticated can read comments
@@ -31,14 +40,14 @@ service cloud.firestore {
                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likesCount'])
                     );
 
-      // Users can only delete their own comments
-      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Users can only delete their own comments OR admins can delete any comment
+      allow delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
     }
 
     // Chat messages collection
     match /chats/{userId}/messages/{messageId} {
-      // Users can only read their own chat history
-      allow read: if isOwner(userId);
+      // Users can only read their own chat history OR admins can read all
+      allow read: if isOwner(userId) || isAdmin();
 
       // Users can only create messages in their own chat
       allow create: if isOwner(userId)

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Ma Conseillère Voyage</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin-styles.css">
+</head>
+<body>
+    <!-- Navbar Admin -->
+    <nav class="navbar admin-navbar">
+        <div class="container">
+            <div class="logo">
+                <h1>🎛️ Admin Dashboard</h1>
+            </div>
+            <div class="nav-right">
+                <div id="admin-info" class="admin-info">
+                    <!-- Admin info will be inserted here -->
+                </div>
+                <button onclick="window.adminModule.logout()" class="btn-logout-nav">Déconnexion</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Container -->
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-nav">
+                <button class="sidebar-item active" data-section="dashboard" onclick="window.adminModule.showSection('dashboard')">
+                    <span class="sidebar-icon">📊</span>
+                    <span>Dashboard</span>
+                </button>
+                <button class="sidebar-item" data-section="comments" onclick="window.adminModule.showSection('comments')">
+                    <span class="sidebar-icon">💬</span>
+                    <span>Commentaires</span>
+                    <span class="badge" id="comments-count">0</span>
+                </button>
+                <button class="sidebar-item" data-section="users" onclick="window.adminModule.showSection('users')">
+                    <span class="sidebar-icon">👥</span>
+                    <span>Utilisateurs</span>
+                    <span class="badge" id="users-count">0</span>
+                </button>
+                <button class="sidebar-item" data-section="chats" onclick="window.adminModule.showSection('chats')">
+                    <span class="sidebar-icon">💭</span>
+                    <span>Conversations</span>
+                    <span class="badge" id="chats-count">0</span>
+                </button>
+                <button class="sidebar-item" data-section="analytics" onclick="window.adminModule.showSection('analytics')">
+                    <span class="sidebar-icon">📈</span>
+                    <span>Analytics</span>
+                </button>
+                <button class="sidebar-item" data-section="settings" onclick="window.adminModule.showSection('settings')">
+                    <span class="sidebar-icon">⚙️</span>
+                    <span>Paramètres</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="admin-section active">
+                <div class="section-header">
+                    <h2>📊 Vue d'ensemble</h2>
+                    <p>Statistiques en temps réel de votre plateforme</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💬</div>
+                        <div class="stat-info">
+                            <h3 id="total-comments">0</h3>
+                            <p>Commentaires</p>
+                        </div>
+                        <div class="stat-trend positive">+12%</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <h3 id="total-users">0</h3>
+                            <p>Utilisateurs</p>
+                        </div>
+                        <div class="stat-trend positive">+8%</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">💭</div>
+                        <div class="stat-info">
+                            <h3 id="total-chats">0</h3>
+                            <p>Conversations</p>
+                        </div>
+                        <div class="stat-trend positive">+24%</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">❤️</div>
+                        <div class="stat-info">
+                            <h3 id="total-likes">0</h3>
+                            <p>Likes</p>
+                        </div>
+                        <div class="stat-trend positive">+15%</div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="activity-section">
+                    <h3>📋 Activité récente</h3>
+                    <div class="activity-list" id="recent-activity">
+                        <div class="activity-item">
+                            <div class="activity-icon">💬</div>
+                            <div class="activity-content">
+                                <p><strong>Nouveau commentaire</strong> de Marie Dupont</p>
+                                <span class="activity-time">Il y a 5 minutes</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon">👥</div>
+                            <div class="activity-content">
+                                <p><strong>Nouvel utilisateur</strong> inscrit</p>
+                                <span class="activity-time">Il y a 15 minutes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Comments Section -->
+            <section id="comments-section" class="admin-section">
+                <div class="section-header">
+                    <h2>💬 Gestion des commentaires</h2>
+                    <p>Modérez et gérez tous les commentaires</p>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Utilisateur</th>
+                                <th>Commentaire</th>
+                                <th>Likes</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comments-table-body">
+                            <!-- Comments will be loaded here -->
+                            <tr>
+                                <td colspan="5" class="loading">Chargement des commentaires...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="users-section" class="admin-section">
+                <div class="section-header">
+                    <h2>👥 Gestion des utilisateurs</h2>
+                    <p>Visualisez et gérez tous les utilisateurs</p>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Email</th>
+                                <th>Méthode</th>
+                                <th>Inscrit le</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <!-- Users will be loaded here -->
+                            <tr>
+                                <td colspan="5" class="loading">Chargement des utilisateurs...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Chats Section -->
+            <section id="chats-section" class="admin-section">
+                <div class="section-header">
+                    <h2>💭 Conversations Chat</h2>
+                    <p>Visualisez toutes les conversations avec l'IA</p>
+                </div>
+
+                <div class="chat-list" id="chat-conversations">
+                    <div class="loading">Chargement des conversations...</div>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics-section" class="admin-section">
+                <div class="section-header">
+                    <h2>📈 Analytics & Statistiques</h2>
+                    <p>Analyses détaillées de l'utilisation</p>
+                </div>
+
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>📊 Commentaires par jour</h3>
+                        <div class="chart-placeholder">
+                            <div class="chart-bar" style="height: 40%"></div>
+                            <div class="chart-bar" style="height: 60%"></div>
+                            <div class="chart-bar" style="height: 80%"></div>
+                            <div class="chart-bar" style="height: 50%"></div>
+                            <div class="chart-bar" style="height: 90%"></div>
+                            <div class="chart-bar" style="height: 70%"></div>
+                            <div class="chart-bar" style="height: 85%"></div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-card">
+                        <h3>👥 Inscriptions par semaine</h3>
+                        <div class="chart-placeholder">
+                            <div class="chart-bar" style="height: 30%"></div>
+                            <div class="chart-bar" style="height: 45%"></div>
+                            <div class="chart-bar" style="height: 70%"></div>
+                            <div class="chart-bar" style="height: 85%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analytics-stats">
+                    <div class="analytics-stat">
+                        <h4>Temps moyen par conversation</h4>
+                        <p class="analytics-value">4.2 min</p>
+                    </div>
+                    <div class="analytics-stat">
+                        <h4>Taux d'engagement</h4>
+                        <p class="analytics-value">68%</p>
+                    </div>
+                    <div class="analytics-stat">
+                        <h4>Messages par conversation</h4>
+                        <p class="analytics-value">8.5</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings-section" class="admin-section">
+                <div class="section-header">
+                    <h2>⚙️ Paramètres</h2>
+                    <p>Configuration du dashboard</p>
+                </div>
+
+                <div class="settings-grid">
+                    <div class="settings-card">
+                        <h3>🔒 Sécurité</h3>
+                        <div class="setting-item">
+                            <label>Email admin</label>
+                            <input type="email" id="admin-email" readonly placeholder="admin@mcv.com">
+                        </div>
+                        <div class="setting-item">
+                            <label>Liste des admins autorisés</label>
+                            <textarea id="admin-list" rows="4" placeholder="admin@mcv.com&#10;autre@mcv.com"></textarea>
+                            <p class="setting-help">Un email par ligne</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>📧 Notifications</h3>
+                        <div class="setting-item">
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="notify-comments" checked>
+                                <span>Nouveaux commentaires</span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="notify-users" checked>
+                                <span>Nouveaux utilisateurs</span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="notify-spam">
+                                <span>Alertes spam</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>🎨 Apparence</h3>
+                        <div class="setting-item">
+                            <label>Thème</label>
+                            <select id="theme-select">
+                                <option value="light">Clair</option>
+                                <option value="dark">Sombre</option>
+                                <option value="auto">Automatique</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-save-settings" onclick="window.adminModule.saveSettings()">
+                    Enregistrer les modifications
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { initAdmin } from './js/admin.js';
+        import * as adminModule from './js/admin.js';
+
+        // Make admin functions globally available
+        window.adminModule = adminModule;
+
+        // Initialize admin dashboard
+        initAdmin();
+    </script>
+</body>
+</html>
